@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GYM — Daily Grind</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700;800;900&family=Syne:wght@400;500;600&display=swap" rel="stylesheet"/>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0b0b0b;
+      --bg2:       #111111;
+      --bg3:       #181818;
+      --border:    #222222;
+      --border2:   #2a2a2a;
+      --fire:      #ff4d00;
+      --fire2:     #ff8c00;
+      --text:      #f2ede8;
+      --muted:     #555;
+      --muted2:    #888;
+      --done:      #282828;
+      --done-text: #3a3a3a;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Noise texture overlay ── */
+    body::after {
+      content: '';
+      position: fixed; inset: 0; z-index: 999;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+      mix-blend-mode: overlay;
+    }
+
+    /* ══════════════════════════════════
+       HERO HEADER
+    ══════════════════════════════════ */
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 56px 24px 48px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* diagonal fire stripes */
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -60px; right: -80px;
+      width: 420px; height: 420px;
+      background: repeating-linear-gradient(
+        -55deg,
+        transparent,
+        transparent 18px,
+        rgba(255,77,0,.045) 18px,
+        rgba(255,77,0,.045) 20px
+      );
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    /* glow blob */
+    .hero::after {
+      content: '';
+      position: absolute;
+      top: -100px; right: -120px;
+      width: 360px; height: 360px;
+      background: radial-gradient(circle, rgba(255,77,0,.18) 0%, transparent 65%);
+      pointer-events: none;
+      animation: pulse 4s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%,100% { opacity: .7; transform: scale(1); }
+      50%      { opacity: 1;  transform: scale(1.08); }
+    }
+
+    .hero-inner {
+      max-width: 620px;
+      margin: 0 auto;
+      position: relative; z-index: 1;
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: var(--fire);
+      margin-bottom: 12px;
+    }
+    .hero-eyebrow span {
+      display: inline-block;
+      width: 28px; height: 2px;
+      background: var(--fire);
+    }
+
+    .hero-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: clamp(70px, 18vw, 110px);
+      font-weight: 900;
+      line-height: .9;
+      letter-spacing: -.01em;
+      text-transform: uppercase;
+    }
+    .hero-title .line1 { color: var(--text); display: block; }
+    .hero-title .line2 {
+      display: block;
+      -webkit-text-stroke: 1.5px var(--fire);
+      color: transparent;
+    }
+
+    .hero-meta {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    .hero-date {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--muted2);
+    }
+    .hero-badge {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      border: 1px solid var(--fire);
+      color: var(--fire);
+      border-radius: 3px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-badge::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: var(--fire);
+      opacity: .08;
+    }
+
+    .hero-quote {
+      margin-top: 20px;
+      font-size: 13px;
+      font-style: italic;
+      color: var(--muted2);
+      border-left: 2px solid var(--fire);
+      padding-left: 14px;
+      line-height: 1.6;
+    }
+
+    /* ══════════════════════════════════
+       PROGRESS BAR (weight bar style)
+    ══════════════════════════════════ */
+    .progress-section {
+      max-width: 620px;
+      margin: 0 auto;
+      padding: 28px 24px 0;
+    }
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+    .bar-track {
+      height: 6px;
+      background: var(--border2);
+      border-radius: 0;
+      position: relative;
+      overflow: visible;
+    }
+    /* end caps like a barbell */
+    .bar-track::before,
+    .bar-track::after {
+      content: '';
+      position: absolute;
+      top: 50%; transform: translateY(-50%);
+      width: 6px; height: 20px;
+      background: var(--border2);
+      border-radius: 2px;
+    }
+    .bar-track::before { left: -6px; }
+    .bar-track::after  { right: -6px; }
+    .bar-fill {
+      position: absolute;
+      top: 0; left: 0; bottom: 0;
+      width: 0%;
+      background: linear-gradient(90deg, var(--fire), var(--fire2));
+      border-radius: 0;
+      transition: width .5s ease;
+      box-shadow: 0 0 14px rgba(255,77,0,.5);
+    }
+
+    /* ══════════════════════════════════
+       MAIN LAYOUT
+    ══════════════════════════════════ */
+    .main {
+      max-width: 620px;
+      margin: 0 auto;
+      padding: 32px 24px 80px;
+    }
+
+    /* ── Section header ── */
+    .section-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 36px 0 14px;
+    }
+    .section-icon {
+      width: 32px; height: 32px;
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+    .section-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: var(--muted2);
+    }
+    .section-line {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, var(--border2), transparent);
+    }
+    .section-count {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      color: var(--muted);
+    }
+
+    /* ── Task item ── */
+    input.task { display: none; }
+
+    .task-label {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 16px 20px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-left: 3px solid transparent;
+      cursor: pointer;
+      margin-bottom: 8px;
+      transition: all .2s ease;
+      position: relative;
+      overflow: hidden;
+      border-radius: 4px;
+    }
+
+    /* shimmer line on hover */
+    .task-label::after {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%; width: 60%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,77,0,.04), transparent);
+      transition: left .4s ease;
+    }
+    .task-label:hover::after { left: 120%; }
+
+    .task-label:hover {
+      border-left-color: var(--fire);
+      background: #141414;
+      transform: translateX(3px);
+    }
+
+    /* Check circle */
+    .chk {
+      width: 22px; height: 22px;
+      flex-shrink: 0;
+      margin-top: 1px;
+      border: 2px solid var(--border2);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      transition: all .25s ease;
+      position: relative;
+    }
+    .chk::before {
+      content: '';
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--fire);
+      opacity: 0;
+      transform: scale(0);
+      transition: all .2s cubic-bezier(.34,1.56,.64,1);
+    }
+    .chk svg {
+      position: absolute;
+      width: 11px; height: 11px;
+      stroke: #fff;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+      opacity: 0;
+      transform: scale(0);
+      transition: all .2s cubic-bezier(.34,1.56,.64,1);
+    }
+
+    /* Task content */
+    .task-body { flex: 1; min-width: 0; }
+    .task-name {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: .02em;
+      text-transform: uppercase;
+      color: var(--text);
+      line-height: 1.2;
+      transition: color .2s;
+    }
+    .task-detail {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--muted);
+      margin-top: 3px;
+      letter-spacing: .04em;
+    }
+
+    /* Right side */
+    .task-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .task-sets {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 20px;
+      font-weight: 900;
+      color: var(--border2);
+      line-height: 1;
+      transition: color .2s;
+    }
+    .task-tag {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 2px;
+    }
+    .tag-warmup   { background: rgba(255,200,0,.12); color: #ffc800; }
+    .tag-strength { background: rgba(255,77,0,.12);  color: #ff4d00; }
+    .tag-cardio   { background: rgba(0,180,255,.1);  color: #00b4ff; }
+    .tag-core     { background: rgba(180,0,255,.1);  color: #c05aff; }
+    .tag-recovery { background: rgba(0,220,120,.1);  color: #00dc78; }
+    .tag-nutrition{ background: rgba(255,140,0,.1);  color: #ff8c00; }
+
+    /* ── CHECKED STATE ── */
+    input.task:checked + .task-label {
+      border-left-color: var(--fire);
+      background: var(--done);
+      border-color: #1e1e1e;
+      transform: none;
+    }
+    input.task:checked + .task-label .chk {
+      background: var(--fire);
+      border-color: var(--fire);
+      box-shadow: 0 0 12px rgba(255,77,0,.4);
+    }
+    input.task:checked + .task-label .chk::before { opacity: 0; }
+    input.task:checked + .task-label .chk svg {
+      opacity: 1;
+      transform: scale(1);
+    }
+    input.task:checked + .task-label .task-name {
+      color: var(--done-text);
+      text-decoration: line-through;
+      text-decoration-color: var(--border2);
+    }
+    input.task:checked + .task-label .task-detail { color: #2e2e2e; }
+    input.task:checked + .task-label .task-sets { color: var(--fire); }
+    input.task:checked + .task-label .task-tag { opacity: .3; }
+    input.task:checked + .task-label::after { display: none; }
+
+    /* ══════════════════════════════════
+       STATS FOOTER
+    ══════════════════════════════════ */
+    .stats {
+      margin-top: 44px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .stat-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 18px 14px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--fire), transparent);
+      opacity: .5;
+    }
+    .stat-card:first-child::before { opacity: 1; }
+    .stat-num {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 40px;
+      font-weight: 900;
+      line-height: 1;
+      color: var(--fire);
+      letter-spacing: -.02em;
+    }
+    .stat-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* ══════════════════════════════════
+       MOTIVATIONAL FOOTER STRIP
+    ══════════════════════════════════ */
+    .marquee-wrap {
+      margin-top: 44px;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      overflow: hidden;
+      padding: 12px 0;
+      white-space: nowrap;
+    }
+    .marquee-inner {
+      display: inline-block;
+      animation: marquee 22s linear infinite;
+    }
+    .marquee-inner span {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 0 32px;
+    }
+    .marquee-inner span b { color: var(--fire); }
+
+    @keyframes marquee {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+
+    /* ══════════════════════════════════
+       STAGGERED ENTRANCE
+    ══════════════════════════════════ */
+    .hero-inner   { animation: fadeUp .7s cubic-bezier(.22,.68,0,1.1) both; }
+    .progress-section { animation: fadeUp .7s .1s both; }
+    .main         { animation: fadeUp .7s .15s both; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .task-label {
+      animation: slideIn .4s both;
+    }
+    .task-group:nth-child(1) .task-label:nth-of-type(1) { animation-delay: .10s; }
+    .task-group:nth-child(1) .task-label:nth-of-type(2) { animation-delay: .15s; }
+    .task-group:nth-child(1) .task-label:nth-of-type(3) { animation-delay: .20s; }
+    .task-group:nth-child(2) .task-label:nth-of-type(1) { animation-delay: .25s; }
+    .task-group:nth-child(2) .task-label:nth-of-type(2) { animation-delay: .30s; }
+    .task-group:nth-child(2) .task-label:nth-of-type(3) { animation-delay: .35s; }
+    .task-group:nth-child(2) .task-label:nth-of-type(4) { animation-delay: .40s; }
+    .task-group:nth-child(3) .task-label:nth-of-type(1) { animation-delay: .45s; }
+    .task-group:nth-child(3) .task-label:nth-of-type(2) { animation-delay: .50s; }
+    .task-group:nth-child(4) .task-label:nth-of-type(1) { animation-delay: .55s; }
+    .task-group:nth-child(4) .task-label:nth-of-type(2) { animation-delay: .60s; }
+    .task-group:nth-child(5) .task-label:nth-of-type(1) { animation-delay: .65s; }
+    .task-group:nth-child(5) .task-label:nth-of-type(2) { animation-delay: .70s; }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-16px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 480px) {
+      .hero { padding: 40px 18px 36px; }
+      .task-sets { display: none; }
+      .stats { grid-template-columns: repeat(3,1fr); }
+      .stat-num { font-size: 30px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ HERO ══ -->
+<header class="hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow"><span></span> Daily Grind <span></span></div>
+    <div class="hero-title">
+      <span class="line1">GYM</span>
+      <span class="line2">CHECKLIST</span>
+    </div>
+    <div class="hero-meta">
+      <span class="hero-date">Monday · May 11, 2026</span>
+      <span class="hero-badge">⚡ Training Day</span>
+    </div>
+    <p class="hero-quote">"The iron never lies to you. You can walk outside and listen to all kinds of talk, get yourself workout up about no problem at all — then you just come back and bang some iron."</p>
+  </div>
+</header>
+
+<!-- ══ PROGRESS ══ -->
+<div class="progress-section">
+  <div class="progress-label">
+    <span>Today's Progress</span>
+    <span>0 / 14 Done</span>
+  </div>
+  <div class="bar-track">
+    <div class="bar-fill" style="width:0%"></div>
+  </div>
+</div>
+
+<!-- ══ TASKS ══ -->
+<main class="main">
+
+  <!-- WARM UP -->
+  <div class="task-group">
+    <div class="section-head">
+      <div class="section-icon">🔥</div>
+      <span class="section-title">Warm Up</span>
+      <div class="section-line"></div>
+      <span class="section-count">3 tasks</span>
+    </div>
+
+    <input type="checkbox" class="task" id="w1"/>
+    <label class="task-label" for="w1">
+      <span class="chk"><svg viewBox="0 0 12 10"><polyline points="1,5 4.5,9 11,1"/></svg></span>
+      <div class="task-body">
+        <div class="task-name">Dynamic Stretching</div>
+        <div class="task-detail">Hip circles · leg swings · arm rotations</div>
+      </div>
+      <div class="task-right">
+        <span class="task-sets">10m</span>
+        <span class="task-tag tag-warmup">Warm Up</span>
+      </div>
+    </label>
+
+    <input type="checkbox" class="task" id="w2"/>
+    <label class="task-label" for="w2">
+      <span class="chk"><svg viewBox="0 0 12 10"><polyline points="1,5 4.5,9 11,1"/></svg></span>
+      <div class="task-body">
+        <div class="task-name">Jump Rope</div>
+        <div class="task-detail">Light pace · elevate heart rate</div>
+      </div>
+      <div class="task-right">
+        <span class="task-sets">5m</span>
+        <span class="task-tag tag-warmup">Warm Up</span>
+      </div>
+    </label>
+
+    <input type="checkbox" class="task" id="w3"/>
+    <label class="task-label" for="w3">
+      <span class="chk"><svg viewBox="0 0 12 10"><polyline points="1,5 4.5,9 11,1"/></svg></span>
+      <div class="task-body">
+        <div class="task-name">Foam Rolling</div>
+        <div class="task-detail">Quads · IT band · upper back</div>
+      </div>
+      <div class="task-right">
+        <span class="task-sets">5m</span>
+        <span class="task-tag tag-warmup">Warm Up</span>
+      </div>
+    </label>
+  </div>
+
+  <!-- STRENGTH -->
+  <div class="task-group">
+    <div class="section-head">
+      <div class="section-icon">🏋️</div>
+      <span class="section-title">Strength</span>
+      <div class="section-line"></div>
+      <span class="section-count">4 tasks</span>
+    </div>
+
+    <input type="checkbox" class="task" id="s1"/>
+    <label class="task-label" for="s1">
+      <span class="chk"><svg viewBox="0 0 12 10"><polyline points="1,5 4.5,9 11,1"/></svg></span>
+      <div class="task-body">
+        <div class="task-name">Bench Press</div>
+        <div class="task-detail">4 × 8 reps · 80% 1RM · 90s rest</div>
+      </div>
+      <div class="task-right">
+        <span class="task-sets">4×8</span>
+        <span class="task-tag tag-strength">Strength</span>
+      </div>
+    </label>
+
+    <input type="checkbox" class="task" id="s2"/>
+    <label class="task-label" for="s2">
+      <span class="chk"><svg viewBox="0 0 12 10"><polyline points="1,5 4.5,9 11,1"/></svg></span>
+      <div class="task-body">
+        <div class="task-name">Deadlift</div>
+        <div class="task-detail">3 × 5 reps · max load · 2m rest</div>
+      </div>
+      <div class="task-right">
+        <span class="task-sets">3×5</span>
+        <span class="task-tag tag-strength">Strength</span>
+      </div>
+    </label>
+
+    <input type="checkbox" class="task" id="s3"/>
+    <label class="task-label" for="s3">
+      <span class="chk"><svg viewBox="0 0 12 10"><polyline points="1,5 4.5,9 11,1"/></svg></span>
+      <div class="task-body">
+        <div class="task-name">Overhead Press</div>
+        <div class="task-detail">4 × 10 reps · strict form · no cheating</div>
+      </div>
+      <div class="task-right">
+        <span class="task-sets">4×10</span>
+        <span class="task-tag tag-strength">Strength</span>
+      </div>
+    </label>
+
+    <input type="checkbox" class="task" id="s4"/>
+    <label class="task-label" for="s4">
+      <span class="chk"><svg viewBox="0 0 12 10"><polyline points="1,5 4.5,9 11,1"/></svg></span>
+      <div class="task-body">
+        <div class="task-name">Pull-Ups</div>
+        <div class="task-detail">4 × max reps · full ROM · weighted if able</div>
+      </div>
+      <div class="task-right">
+        <span class="task-sets">4×∞</span>
+        <span class="task-tag tag-strength">Strength</span>
+      </div>
+    </label>
+  </div>
+
+  <!-- CARDIO -->
+  <div class="task-group">
+    <div class="section-head">
+      <div class="section-icon">💨</div>
+      <span class="section-title">Cardio</span>
+      <div class="section-line"></div>
+      <span class="section-count">2 tasks</span>
+    </div>
+
+    <input type="checkbox" class="task" id="c1"/>
+    <label class="task-label" for="c1">
+      <span class="chk"><svg viewBox="0 0 12 10"><polyline points="1,5 4.5,9 11,1"/></svg></span>
+      <div class="task-body">
+        <div class="task-name">HIIT Sprints</div>
+        <div class="task-detail">8 rounds · 30s on / 30s off · treadmill</div>
+      </div>
+      <div class="task-right">
+        <span class="task-sets">8r</span>
+        <span class="task-tag tag-cardio">Cardio</span>
+      </div>
+    </label>
+
+    <input type="checkbox" class="task" id="c2"/>
+    <label class="task-label" for="c2">
+      <span class="chk"><svg viewBox="0 0 12 10"><polyline points="1,5 4.5,9 11,1"/></svg></span>
+      <div class="task-body">
+        <div class="task-name">Rowing Machine</div>
+        <div class="task-detail">2000m · steady pace · zone 2</div>
+      </div>
+      <div class="task-right">
+        <span class="task-sets">2km</span>
+        <span class="task-tag tag-cardio">Cardio</span>
+      </div>
+    </label>
+  </div>
+
+  <!-- CORE -->
+  <div class="task-group">
+    <div class="section-head">
+      <div class="section-icon">⚡</div>
+      <span class="section-title">Core</span>
+      <div class="section-line"></div>
+      <span class="section-count">2 tasks</span>
+    </div>
+
+    <input type="checkbox" class="task" id="o1"/>
+    <label class="task-label" for="o1">
+      <span class="chk"><svg viewBox="0 0 12 10"><polyline points="1,5 4.5,9 11,1"/></svg></span>
+      <div class="task-body">
+        <div class="task-name">Plank Holds</div>
+        <div class="task-detail">3 × 60s · elbows · brace everything</div>
+      </div>
+      <div class="task-right">
+        <span class="task-sets">3×1m</span>
+        <span class="task-tag tag-core">Core</span>
+      </div>
+    </label>
+
+    <input type="checkbox" class="task" id="o2"/>
+    <label class="task-label" for="o2">
+      <span class="chk"><svg viewBox="0 0 12 10"><polyline points="1,5 4.5,9 11,1"/></svg></span>
+      <div class="task-body">
+        <div class="task-name">Cable Crunches</div>
+        <div class="task-detail">4 × 15 reps · slow negatives</div>
+      </div>
+      <div class="task-right">
+        <span class="task-sets">4×15</span>
+        <span class="task-tag tag-core">Core</span>
+      </div>
+    </label>
+  </div>
+
+  <!-- RECOVERY & NUTRITION -->
+  <div class="task-group">
+    <div class="section-head">
+      <div class="section-icon">🥩</div>
+      <span class="section-title">Fuel &amp; Recovery</span>
+      <div class="section-line"></div>
+      <span class="section-count">3 tasks</span>
+    </div>
+
+    <input type="checkbox" class="task" id="r1"/>
+    <label class="task-label" for="r1">
+      <span class="chk"><svg viewBox="0 0 12 10"><polyline points="1,5 4.5,9 11,1"/></svg></span>
+      <div class="task-body">
+        <div class="task-name">Pre-Workout Meal</div>
+        <div class="task-detail">Carbs + protein · 60 min before session</div>
+      </div>
+      <div class="task-right">
+        <span class="task-sets">—</span>
+        <span class="task-tag tag-nutrition">Fuel</span>
+      </div>
+    </label>
+
+    <input type="checkbox" class="task" id="r2"/>
+    <label class="task-label" for="r2">
+      <span class="chk"><svg viewBox="0 0 12 10"><polyline points="1,5 4.5,9 11,1"/></svg></span>
+      <div class="task-body">
+        <div class="task-name">Post-Workout Shake</div>
+        <div class="task-detail">40g whey + 50g dextrose · within 30 min</div>
+      </div>
+      <div class="task-right">
+        <span class="task-sets">—</span>
+        <span class="task-tag tag-nutrition">Fuel</span>
+      </div>
+    </label>
+
+    <input type="checkbox" class="task" id="r3"/>
+    <label class="task-label" for="r3">
+      <span class="chk"><svg viewBox="0 0 12 10"><polyline points="1,5 4.5,9 11,1"/></svg></span>
+      <div class="task-body">
+        <div class="task-name">Cold Shower + Stretch</div>
+        <div class="task-detail">3 min cold · 10 min static stretch · log session</div>
+      </div>
+      <div class="task-right">
+        <span class="task-sets">15m</span>
+        <span class="task-tag tag-recovery">Recovery</span>
+      </div>
+    </label>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-num">14</div>
+      <div class="stat-label">Tasks</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">5</div>
+      <div class="stat-label">Zones</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">90m</div>
+      <div class="stat-label">Est. Time</div>
+    </div>
+  </div>
+
+  <!-- MARQUEE -->
+  <div class="marquee-wrap">
+    <div class="marquee-inner">
+      <span>No Days Off</span>
+      <span><b>·</b></span>
+      <span>Lift Heavy</span>
+      <span><b>·</b></span>
+      <span>Eat Clean</span>
+      <span><b>·</b></span>
+      <span>Sleep Hard</span>
+      <span><b>·</b></span>
+      <span>Repeat</span>
+      <span><b>·</b></span>
+      <span>No Days Off</span>
+      <span><b>·</b></span>
+      <span>Lift Heavy</span>
+      <span><b>·</b></span>
+      <span>Eat Clean</span>
+      <span><b>·</b></span>
+      <span>Sleep Hard</span>
+      <span><b>·</b></span>
+      <span>Repeat</span>
+      <span><b>·</b></span>
+    </div>
+  </div>
+
+</main>
+</body>
+</html>
